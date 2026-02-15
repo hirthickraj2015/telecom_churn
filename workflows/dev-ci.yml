@@ -1,0 +1,24 @@
+name: Dev CI
+
+
+on:
+push:
+branches: [ "develop" ]
+
+
+jobs:
+run-dev:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+
+
+- uses: databricks/setup-cli@main
+
+
+- name: Run notebook on Databricks (Dev)
+uses: databricks/run-notebook@v0
+with:
+databricks-host: ${{ secrets.DATABRICKS_HOST }}
+databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
+local-notebook-path: notebooks/example_notebook.py

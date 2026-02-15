@@ -1,6 +1,6 @@
 # Telecom Customer Churn Prediction
 
-Predicting customer churn for a telecom service company using machine learning on Databricks. The dataset is sourced from Kaggle.
+A multi-environment Databricks ML pipeline for predicting customer churn in telecom services. The project follows the medallion architecture (raw → bronze → silver) and uses Logistic Regression for binary classification.
 
 ## What This Project Does
 
@@ -10,32 +10,59 @@ Customer churn — when subscribers stop using a telecom provider's services —
 
 ```
 telecom_churn/
-├── data/
-│   ├── config.py        # Data configuration and path settings
-│   ├── evaluate.py      # Data-level evaluation utilities
-│   └── predict.py       # Data processing for prediction inputs
-├── models/
-│   ├── dataset.py       # Dataset loading and preparation
-│   ├── model.py         # Model architecture and training logic
-│   ├── predict.py       # Inference and prediction pipeline
-│   └── utils.py         # Model helper functions
-├── src/
-│   ├── config.py        # Global configuration
-│   ├── dataset.py       # Core dataset handling
-│   ├── evaluate.py      # Model evaluation metrics
-│   ├── model.py         # Main model definitions
-│   └── utils.py         # Shared utility functions
-├── config.yaml          # YAML-based project configuration
-├── requirements.txt     # Python dependencies
+├── notebook/
+│   ├── dev/                       # Development environment
+│   ├── prod/                      # Production environment
+│   └── uat/                       # User Acceptance Testing environment
+│       └── [each environment contains]:
+│           ├── nb_raw/
+│           │   └── nb_setup.ipynb           # Raw data ingestion setup
+│           ├── nb_bronze/
+│           │   └── nb_incremental_load.ipynb # Incremental data loading
+│           └── nb_silver/
+│               └── nb_silver.ipynb          # Data transformation & ML training
+├── workflows/
+│   ├── dev-ci.yml                 # Development CI pipeline
+│   └── prod-ci.yml                # Production CI pipeline
+├── LICENSE
 └── README.md
 ```
 
+## Data Pipeline (Medallion Architecture)
+
+| Layer | Notebook | Purpose |
+|-------|----------|---------|
+| **Raw** | `nb_setup.ipynb` | Creates Databricks volumes and directory structure for raw data |
+| **Bronze** | `nb_incremental_load.ipynb` | Streams CSV data from raw volumes into Delta Lake tables |
+| **Silver** | `nb_silver.ipynb` | Data transformation, feature engineering, model training & evaluation |
+
+## ML Model
+
+- **Algorithm:** Logistic Regression (scikit-learn)
+- **Target:** Customer churn (binary classification: Yes/No)
+- **Training:** 80/20 train-test split
+- **Evaluation Metrics:** Accuracy, F1 Score, Confusion Matrix, Classification Report
+
 ## Tech Stack
 
-- **Python** — all source code
-- **Databricks** — used as the compute and notebook environment for training and experimentation
-- **NumPy** — numerical operations
-- **pytest** — testing
+- **Databricks** — compute and notebook environment
+- **PySpark / Spark SQL** — distributed data processing
+- **Delta Lake** — ACID-compliant table format
+- **Pandas** — DataFrame operations
+- **scikit-learn** — ML model training and evaluation
+- **Matplotlib / Seaborn** — data visualization
+- **GitHub Actions** — CI/CD automation
+
+## Dataset Features
+
+**Input Features (from Kaggle telecom dataset):**
+- Demographics: gender, senior citizen status, partner, dependents
+- Account: tenure, phone service, paperless billing
+- Services: multiple lines, internet service, online security, online backup, device protection, tech support, streaming TV, streaming movies
+- Contract: contract type (Month-to-month, One year, Two year)
+- Billing: payment method, monthly charges, total charges
+
+**Target Variable:** Churn (Yes/No)
 
 ## Getting Started
 
@@ -45,19 +72,20 @@ telecom_churn/
    cd telecom_churn
    ```
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. Import the project into your Databricks workspace.
 
-3. Update `config.yaml` with your dataset paths and any environment-specific settings.
+3. Configure your Databricks cluster with the required packages (PySpark, pandas, scikit-learn, matplotlib, seaborn).
 
-4. If running on Databricks, import the project into your workspace and configure your cluster with the required packages.
+4. Download the telecom customer churn dataset from Kaggle and upload it to your Databricks volume.
 
-## Dataset
+5. Run the notebooks in order: `nb_setup.ipynb` → `nb_incremental_load.ipynb` → `nb_silver.ipynb`
 
-The dataset comes from Kaggle and contains telecom customer records with features like account length, call minutes, service plan subscriptions, customer service call counts, and churn labels. You'll need to download it separately from Kaggle and place it in the expected data directory.
+## CI/CD
+
+The project includes GitHub Actions workflows for automated deployments:
+- `dev-ci.yml` — triggers on pushes to the develop branch
+- `prod-ci.yml` — triggers on pushes to the main branch
 
 ## License
 
-No license specified.
+See [LICENSE](LICENSE) file.
